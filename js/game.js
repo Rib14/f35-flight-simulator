@@ -26,7 +26,7 @@ const CONFIG = {
     dayLengthSec: 480,
     storageKey: 'f35_best_score',
     world: {
-        friendlyIsland: { x: 0, z: 800, radius: 1000 },
+        friendlyIsland: { x: 0, z: 800, radius: 1850 },
         allyCarrier: { x: 0, z: 2500, scale: 1.5 },
         enemyBase: { x: 0, z: -12000, radius: 2000 },
         islandHeight: 4,
@@ -223,10 +223,66 @@ function makeRunway(x, z, w, len, y, color, stripes) {
 }
 
 const FI = CONFIG.world.friendlyIsland, EB = CONFIG.world.enemyBase, AC = CONFIG.world.allyCarrier;
-makeIsland(FI.x, FI.z, FI.radius, 1200, 0x4a6a3a);
-makeRunway(FI.x, FI.z, 80, 1200, 2.5, 0x333333, true);
+makeIsland(FI.x, FI.z, FI.radius, 2000, 0x4a6a3a);
+makeRunway(FI.x, FI.z, 110, 1800, 4.15, 0x333333, true);
 makeIsland(EB.x, EB.z, EB.radius, 2500, 0x3a5a2a);
 makeRunway(EB.x, EB.z, 150, 2000, 2.5, 0x2a2a2a, false);
+
+// Base alleata ampliata: struttura procedurale leggera per mobile.
+// Le posizioni sono condivise in coordinate mondo, utilizzabili anche per il multiplayer.
+const COOP_SPAWNS = [
+    [-380, FI.z + 600], [-240, FI.z + 600], [-100, FI.z + 600],
+    [100, FI.z + 600], [240, FI.z + 600], [380, FI.z + 600]
+];
+const baseDeco = new THREE.Group(); scene.add(baseDeco);
+function baseBox(x, y, z, w, h, d, color, parent = baseDeco) {
+    const ob = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({color, roughness:0.88}));
+    ob.position.set(x,y,z); parent.add(ob); return ob;
+}
+function buildAirbase() {
+    const z = FI.z;
+    // Piazzali per sei piloti, raccordi e hangar con fronte aperto verso la pista.
+    for (const side of [-1,1]) {
+        baseBox(side*270, 4.08, z+390, 400, 0.25, 610, 0x545c5e);
+        baseBox(side*125, 4.1, z+300, 170, 0.24, 85, 0x464b4e);
+    }
+    COOP_SPAWNS.forEach(([x,sz],i)=>{
+        baseBox(x,4.23,sz,95,0.2,86,0x606d6c);
+        const line=baseBox(x,4.37,sz,3,0.12,35,0xe1c851);
+        baseBox(x,4.48,sz+42,45,0.1,2,0xf5e6a0);
+    });
+    [-1,1].forEach(side=>{
+        for(let i=0;i<3;i++) {
+            const x=side*(420+ i*130), zpos=z+175;
+            baseBox(x,30,zpos,112,52,155,0x657780);
+            baseBox(x,58,zpos,122,8,165,0x394b54);
+            // Portone aperto, spazio scuro ben visibile.
+            baseBox(x,24,zpos+78,88,39,2,0x15232b);
+            baseBox(x-47,25,zpos+79,6,45,3,0xa0abb0);
+            baseBox(x+47,25,zpos+79,6,45,3,0xa0abb0);
+        }
+    });
+    // Torre di controllo, magazzini, terminal e fari semplici.
+    baseBox(-850,27,z-240,100,50,110,0x71858e);
+    baseBox(-850,63,z-240,130,23,130,0x345b70);
+    baseBox(-850,76,z-240,145,5,144,0x273f4a);
+    for(let i=0;i<5;i++) baseBox(720,14,z-550+i*135,130,25,95,0x66745d);
+    const lightGeoB=new THREE.SphereGeometry(3.5,6,5);
+    const lightMatB=new THREE.MeshBasicMaterial({color:0xffecc0});
+    for(let zi=-850;zi<=850;zi+=130) for(const x of [-68,68]) {
+        const l=new THREE.Mesh(lightGeoB,lightMatB);l.position.set(x,5,z+zi);baseDeco.add(l);
+    }
+    // Base avversaria: infrastrutture visibili, bersagli attivi creati solo nella missione Raid.
+    const ez=EB.z;
+    for(let i=0;i<4;i++) {
+        baseBox(-1350+i*240,28,ez+800,205,48,195,0x746b62);
+        baseBox(-950+i*270,55,ez+500,215,6,205,0x494744);
+    }
+    baseBox(900,50,ez-340,120,95,140,0x6e6761);
+    baseBox(900,102,ez-340,165,9,170,0x454443);
+    for(let i=0;i<4;i++) baseBox(800+i*120,16,ez+550,75,30,125,0x7b6654);
+}
+buildAirbase();
 
 // --- Schiuma costiera, montagne e isolette ---
 const foamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, depthWrite: false, side: THREE.DoubleSide });
@@ -571,6 +627,19 @@ function buildTargets(kind) {
         [[-800, EB.z], [800, EB.z], [-800, EB.z - 800], [800, EB.z - 800], [0, EB.z + 800]].forEach(p =>
             add(makeSam(p[0], p[1], false),
                 { type: 'sam', hp: 15, box: { hx: 15, hy: 15, hz: 15, cy: 15 }, range: 5000, reload: 4, missile: 'sam' }));
+    } else if (kind === 'airbase') {
+        // Edifici separati dalla scenografia, così i bersagli diventano realmente distruttibili.
+        const facility=(x,z,w,h,d,hp)=>{
+            const ob=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:0x8b4e45,roughness:0.8}));
+            ob.position.set(x,4+h/2,z);scene.add(ob);
+            add(ob,{type:'facility',hp,box:{hx:w/2,hy:h/2,hz:d/2,cy:0}});
+        };
+        add(makeRadar(EB.x,EB.z-850),{type:'radar',hp:30,box:{hx:80,hy:80,hz:80,cy:0}});
+        [[-900,EB.z+350],[-600,EB.z+350],[-300,EB.z+350],[0,EB.z+350]].forEach(([x,z])=>facility(x,z,180,50,150,18));
+        [[600,EB.z+700],[820,EB.z+700]].forEach(([x,z])=>facility(x,z,110,34,150,14));
+        facility(850,EB.z-450,140,100,140,45);
+        [[-650,EB.z-850],[650,EB.z-850]].forEach(([x,z])=>
+          add(makeSam(x,z,false),{type:'sam',hp:15,box:{hx:15,hy:15,hz:15,cy:15},range:5000,reload:5,missile:'sam'}));
     } else if (kind === 'convoy') {
         // Convoglio in fuga verso nord: 6 cargo + 3 scorte
         const mv = new THREE.Vector3(0, 0, -14);
@@ -612,6 +681,13 @@ function convoyCenter() {
 const FLEET_MIX = w => w < 2 ? { fighter: 1 } : w < 3 ? { fighter: 0.7, drone: 0.3 }
     : w < 5 ? { fighter: 0.5, agile: 0.3, drone: 0.2 } : { fighter: 0.4, agile: 0.3, drone: 0.2, bomber: 0.1 };
 const MISSIONS = {
+    baseRaid: {
+        title: 'OPERAZIONE: BASE NEMICA', kind:'airbase', time:0.17, start:35,
+        desc:'Parti dal nuovo hangar, decolla e distruggi radar, 7 edifici strategici e 2 difese SAM. Missione single player preparatoria al cooperativo.',
+        size:w=>3+w*2, mix:FLEET_MIX,
+        goals:()=>['Radar: '+(game.mission.radar?'DISTRUTTO':'ATTIVO'), 'Strutture: '+game.mission.facilities+'/7', 'Difese SAM: '+game.mission.sams+'/2'],
+        won:()=>game.mission.radar && game.mission.facilities>=7 && game.mission.sams>=2
+    },
     assault: {
         title: 'ASSALTO ALLA FLOTTA', kind: 'fleet', time: 0.22, start: 20,
         desc: 'Distruggi il radar, le 3 portaerei e 6 cacciatorpediniere nemiche. Il nemico invierà ondate sempre più dure.',
@@ -671,7 +747,7 @@ const game = {
     rearmTimer: 0, smokeTimer: 0, warnTimer: 0,
     targetAltitude: -1, manualThrottle: false, currentTarget: null, targetDist: 0,
     alliesSpawned: false, deathReason: '',
-    mission: { radar: false, carriers: 0, destroyers: 0, cargo: 0, carrierHp: 100 },
+    mission: { radar: false, carriers: 0, destroyers: 0, cargo: 0, carrierHp: 100, facilities: 0, sams: 0 },
     gForce: 1, gLoad: 0, blackout: 0,
     engineStarted: false, engineSpool: 0, flaps: 0, gear: true,
     showEngineWarning: 0,
@@ -1291,7 +1367,8 @@ function damageGround(t, dmg, byPlayer) {
     else if (type === 'carrier') { game.score += 10000; m.carriers++; }
     else if (type === 'destroyer') { game.score += 3000; m.destroyers++; }
     else if (type === 'cargo') { game.score += 2000; m.cargo++; }
-    else if (type === 'sam') game.score += 1000;
+    else if (type === 'sam') { game.score += 1000; m.sams++; }
+    else if (type === 'facility') { game.score += 2500; m.facilities++; }
 
     if (type === 'carrier' || type === 'destroyer' || type === 'cargo') {
         const n = type === 'carrier' ? 6 : 2, b = t.userData.box;
@@ -2481,7 +2558,7 @@ function resetGame() {
         time: M.time, weather: w.v, weatherName: w.name,
         damageFlash: 0, hitMarker: 0, shake: 0, dangerAlert: false, threat: null,
         rearmTimer: 0, smokeTimer: 0, targetAltitude: -1, manualThrottle: false, currentTarget: null,
-        alliesSpawned: false, deathReason: '', mission: { radar: false, carriers: 0, destroyers: 0, cargo: 0, carrierHp: 100 },
+        alliesSpawned: false, deathReason: '', mission: { radar: false, carriers: 0, destroyers: 0, cargo: 0, carrierHp: 100, facilities: 0, sams: 0 },
         gForce: 1, gLoad: 0, blackout: 0, aoa: 0, stalled: false, gStress: 0, redout: 0, gloc: 0,
         engineStarted: false, engineSpool: 0, flaps: 0, gear: true, showEngineWarning: 0,
         sonarSweep: 0
@@ -2502,7 +2579,7 @@ function startMission(from) {
     if (from === 'carrier') {
         jetState.position.set(AC.x, DECK_Y + 0.1, AC.z + 220);
     } else {
-        jetState.position.set(FI.x, CONFIG.world.islandHeight, FI.z + 450);
+        jetState.position.set(COOP_SPAWNS[0][0], CONFIG.world.islandHeight + 0.35, COOP_SPAWNS[0][1]);
     }
     ui.menu.style.display = 'none'; ui.over.style.display = 'none'; ui.pause.style.display = 'none';
     game.state = 'playing';
