@@ -18,11 +18,13 @@
  stick.addEventListener('pointerdown',e=>{e.preventDefault();if(stickPointer!==null)return;stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);moveStick(e);});
  stick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)moveStick(e);});
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])stick.addEventListener(ev,e=>{if(e.pointerId===stickPointer)resetStick();});
- const actions={missile:()=>fireMissile(),flare:()=>dropFlare(),bomb:()=>dropBomb(false),cluster:()=>dropBomb(true),pause:()=>togglePause(),engine:()=>startEngine(),gear:()=>toggleGear(),flaps:()=>toggleFlaps(),yawLeft:()=>{mobileInput.yaw=-1;setTimeout(()=>mobileInput.yaw=0,250);},yawRight:()=>{mobileInput.yaw=1;setTimeout(()=>mobileInput.yaw=0,250);}};
+ const actions={missile:()=>fireMissile(),flare:()=>dropFlare(),bomb:()=>dropBomb(false),cluster:()=>dropBomb(true),pause:()=>togglePause(),engine:()=>{if(game.state!=='playing')return;initAudio();startEngine();updateEngineButton();},gear:()=>toggleGear(),flaps:()=>toggleFlaps(),yawLeft:()=>{mobileInput.yaw=-1;setTimeout(()=>mobileInput.yaw=0,250);},yawRight:()=>{mobileInput.yaw=1;setTimeout(()=>mobileInput.yaw=0,250);}};
+ const engineButton=root.querySelector('[data-action="engine"]');
+ function updateEngineButton(){const on=game.state==='playing'&&game.engineStarted; engineButton.textContent=on?'✓ ACCESO':'⏻ MOTORE'; engineButton.classList.toggle('engine-on',on); engineButton.setAttribute('aria-pressed',String(on));}
  root.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();if(b.dataset.action==='pause'||game.state==='playing')actions[b.dataset.action]();}));
  root.querySelectorAll('[data-hold]').forEach(b=>{const name=b.dataset.hold;const release=()=>{mobileInput[name]=false;b.classList.remove('pressed');};b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);mobileInput[name]=true;b.classList.add('pressed');});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,release));});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){resetStick();Object.keys(mobileInput).forEach(k=>mobileInput[k]=k==='pitch'||k==='roll'||k==='yaw'?0:false);}});
- const refresh=()=>{root.classList.toggle('in-game',game.state==='playing');};
+ const refresh=()=>{root.classList.toggle('in-game',game.state==='playing');updateEngineButton();};
  setInterval(refresh,200);refresh();
  const rotate=document.createElement('div');rotate.id='rotate-notice';rotate.innerHTML='<div>↻</div>Ruota lo smartphone in orizzontale<br><small>F-35 Flight Simulator</small>';document.body.appendChild(rotate);
  window.addEventListener('contextmenu',e=>e.preventDefault());

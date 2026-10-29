@@ -1175,7 +1175,8 @@ ui.btnFlaps.addEventListener('click', toggleFlaps);
 ui.btnGear.addEventListener('click', toggleGear);
 
 function startEngine() {
-    if (game.engineStarted) return;
+    if (game.state !== 'playing' || game.engineStarted) return;
+    initAudio();
     game.engineStarted = true;
     game.engineSpool = 0;
     playSound('startup');
