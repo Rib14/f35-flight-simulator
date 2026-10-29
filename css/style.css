@@ -111,3 +111,53 @@ canvas {
     width:100%;
     height:100%;
 }
+/* Mobile landscape cockpit overrides (game.js also injects desktop styles). */
+html,body { width:100%;height:100%;overscroll-behavior:none; }
+.touch-device, .touch-device body { touch-action:none; }
+#mobile-controls,#rotate-notice{display:none}
+@media (pointer:coarse) {
+ #mobile-controls{display:block;position:fixed;inset:0;z-index:50;pointer-events:none;font-family:system-ui,sans-serif;color:#d9fff0;user-select:none;-webkit-user-select:none}
+ #mobile-controls button,#mobile-stick{pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent}
+ #mobile-controls button{background:rgba(5,30,48,.72);border:1px solid rgba(135,255,203,.7);color:#eafff5;border-radius:11px;font-size:clamp(13px,2.4vw,20px);font-weight:700;min-width:40px;min-height:38px;padding:5px}
+ #mobile-controls button:active,#mobile-controls button.pressed{background:rgba(27,143,117,.85)}
+ #mobile-controls button small{display:block;font-size:9px;letter-spacing:.3px}
+ #mobile-controls:not(.in-game) #mobile-stick,#mobile-controls:not(.in-game) #mobile-throttle,#mobile-controls:not(.in-game) #mobile-actions,#mobile-controls:not(.in-game) #mobile-top{display:none}
+ #mobile-stick{position:absolute;bottom:max(18px,4vh);left:max(16px,3vw);width:clamp(95px,22vh,155px);height:clamp(95px,22vh,155px);border:2px solid #85e8ce;border-radius:50%;background:rgba(0,30,44,.4);display:grid;place-items:center;box-shadow:inset 0 0 20px #001b2a}
+ #mobile-stick span{position:absolute;bottom:4px;font-size:9px;opacity:.8}
+ #mobile-knob{width:40%;height:40%;border-radius:50%;border:2px solid #c6fff0;background:rgba(92,200,181,.5);box-shadow:0 0 15px #003c3e}
+ #mobile-throttle{position:absolute;bottom:max(20px,4vh);left:calc(max(16px,3vw) + clamp(95px,22vh,155px) + 12px);display:flex;flex-direction:column;align-items:center;gap:3px}
+ #mobile-throttle span{font-size:9px}
+ #mobile-actions{position:absolute;right:max(10px,2vw);bottom:max(12px,3vh);display:grid;grid-template-columns:repeat(3,minmax(44px,64px));gap:5px}
+ #mobile-actions .fire{grid-row:span 2;background:rgba(133,39,32,.85)}
+ #mobile-top{position:absolute;top:max(42px,9vh);left:50%;transform:translateX(-50%);display:flex;gap:5px}
+ #mobile-top button{font-size:10px;min-height:30px;padding:4px 7px}
+ .hud .bar{height:29px!important;font-size:10px!important;padding:0 8px!important}
+ .hud .panel{font-size:10px!important;padding:4px 6px!important}
+ .hud .aircraft-panel{top:34px!important;right:8px!important;width:110px!important;transform:none!important;padding:4px!important}
+ .hud .aircraft-panel svg{width:50px!important;height:50px!important}
+ .hud .aircraft-panel .weapons-row{font-size:9px!important}
+ .hud .aircraft-panel .weapon .icon{font-size:12px!important}
+ .hud .sonar-panel{display:none!important}
+ .hud .ctrl-btn{display:none!important}
+ .hud .btn{max-width:85vw!important;width:280px!important;padding:10px!important;margin-bottom:8px!important;font-size:14px!important}
+ .overlay{padding:10px!important;overflow-y:auto!important;justify-content:flex-start!important;padding-top:5vh!important}
+ .overlay h1{font-size:clamp(20px,5vw,32px)!important}
+ .overlay p{font-size:12px!important;margin:6px!important}
+ .hud #radar{width:85px!important;height:85px!important;top:34px!important;right:122px!important}
+ .hud .sonar-panel{display:none!important}
+ .hud .aircraft-panel{max-height:110px;overflow:hidden}
+ .hud .panel[style*="top: 260px"],.hud .panel[style*="top:260px"]{display:none!important}
+ .hud .panel[style*="top: 124px"],.hud .panel[style*="top:124px"]{display:none!important}
+ .hud .panel[style*="bottom: 50px"],.hud .panel[style*="bottom:50px"]{display:none!important}
+ .hud .bar[style*="bottom: 0px"],.hud .bar[style*="bottom:0"]{font-size:10px!important}
+ .hud canvas:not(.sonar-panel canvas){max-width:none}
+ #rotate-notice{display:none}
+}
+@media (pointer:coarse) and (orientation:portrait) {
+ #rotate-notice{display:flex;position:fixed;inset:0;z-index:200;background:#041a29;color:#d4fff1;align-items:center;justify-content:center;flex-direction:column;text-align:center;font:700 20px system-ui;gap:14px;padding:20px}
+ #rotate-notice div{font-size:65px}#rotate-notice small{font-size:12px;font-weight:400}
+}
+@media (pointer:coarse) and (max-height:420px) and (orientation:landscape){
+ .hud .aircraft-panel{display:none!important}.hud #radar{right:8px!important;width:65px!important;height:65px!important}
+ #mobile-top{top:33px}#mobile-actions{grid-template-columns:repeat(3,46px)}#mobile-actions button{font-size:13px;min-height:34px}#mobile-actions button small{font-size:7px}
+}

@@ -749,6 +749,7 @@ window.addEventListener('keydown', e => {
 // COMANDI: tastiera (con rampa per il controllo fine) e gamepad
 // ============================================================
 const kb = { pitch: 0, roll: 0, yaw: 0 };
+const mobileInput = { pitch:0, roll:0, yaw:0, fire:false, thrUp:false, thrDown:false, brake:false };
 const input = { pitch: 0, roll: 0, yaw: 0, fire: false, thrUp: false, thrDown: false, brake: false };
 const pad = { prev: [], cur: null };
 
@@ -780,13 +781,13 @@ function readInput(dt) {
     const ky = ((k.ArrowLeft || k.KeyQ) ? 1 : 0) - ((k.ArrowRight || k.KeyE) ? 1 : 0);
     const f = damp(9, dt);
     kb.pitch += (kp - kb.pitch) * f; kb.roll += (kr - kb.roll) * f; kb.yaw += (ky - kb.yaw) * f;
-    input.pitch = clamp(kb.pitch + (g ? g.pitch : 0), -1, 1) * settings.sens;
-    input.roll = clamp(kb.roll + (g ? g.roll : 0), -1, 1) * settings.sens;
-    input.yaw = clamp(kb.yaw + (g ? g.yaw : 0), -1, 1) * settings.sens;
-    input.fire = !!(k.Space || (g && g.fire));
-    input.thrUp = !!(k.ShiftLeft || k.ShiftRight || (g && g.thrUp));
-    input.thrDown = !!(k.ControlLeft || k.ControlRight || (g && g.thrDown));
-    input.brake = !!(k.KeyB || (g && g.brake));
+    input.pitch = clamp(kb.pitch + (g ? g.pitch : 0) + mobileInput.pitch, -1, 1) * settings.sens;
+    input.roll = clamp(kb.roll + (g ? g.roll : 0) + mobileInput.roll, -1, 1) * settings.sens;
+    input.yaw = clamp(kb.yaw + (g ? g.yaw : 0) + mobileInput.yaw, -1, 1) * settings.sens;
+    input.fire = !!(k.Space || (g && g.fire) || mobileInput.fire);
+    input.thrUp = !!(k.ShiftLeft || k.ShiftRight || (g && g.thrUp) || mobileInput.thrUp);
+    input.thrDown = !!(k.ControlLeft || k.ControlRight || (g && g.thrDown) || mobileInput.thrDown);
+    input.brake = !!(k.KeyB || (g && g.brake) || mobileInput.brake);
 }
 
 // ============================================================
