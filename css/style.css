@@ -1,0 +1,113 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #87CEEB; /* Cielo azzurro */
+    font-family: monospace;
+}
+canvas {
+    display: block;
+}
+/* ============================================================
+   PANNELLO AEREO — alto a destra
+   ============================================================ */
+.aircraft-panel {
+    position: absolute;
+    top: 60px;
+    right: 220px; /* lascia spazio al radar (right:20 + 180px + 20px) */
+    width: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(0, 20, 10, 0.55);
+    border: 2px solid rgba(125, 255, 176, 0.4);
+    border-radius: 10px;
+    padding: 8px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.15s ease;
+}
+
+.aircraft-panel svg {
+    width: 120px;
+    height: 120px;
+    filter: drop-shadow(0 0 6px rgba(125, 255, 176, 0.4));
+}
+
+.aircraft-panel .health-row {
+    width: 100%;
+    margin-top: 6px;
+}
+
+.aircraft-panel .bar-label {
+    font-size: 10px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    color: #7dffb0;
+}
+
+.aircraft-panel .bar-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(125, 255, 176, 0.3);
+}
+
+.aircraft-panel .bar-fill {
+    height: 100%;
+    width: 100%;
+    background: #7dffb0;
+    transition: width 0.2s ease, background 0.2s ease;
+}
+
+.aircraft-panel .weapons-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.aircraft-panel .weapon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: #7dffb0;
+}
+
+.aircraft-panel .weapon .icon {
+    font-size: 16px;
+}
+
+.aircraft-panel .weapon .count {
+    font-weight: bold;
+    color: #ffaa00;
+}
+
+.aircraft-panel .weapon .count.empty {
+    color: #ff4444;
+}
+
+
+/* Sonar */
+.sonar-panel{
+    position:absolute;
+    bottom:60px;      /* Sollevato dalla barra in basso */
+    left:20px;        /* Spostato a SINISTRA */
+    width:130px;      /* Leggermente più piccolo */
+    height:130px;
+    border-radius:50%;
+    border:2px solid #00ffcc;
+    background:rgba(0,20,20,0.7);
+    box-shadow:0 0 15px rgba(0,255,204,0.3);
+    overflow:hidden;
+    z-index: 5;       /* Sotto i pulsanti se si sovrappongono */
+}
+.sonar-panel canvas{
+    width:100%;
+    height:100%;
+}
