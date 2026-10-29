@@ -223,8 +223,12 @@ function makeRunway(x, z, w, len, y, color, stripes) {
 }
 
 const FI = CONFIG.world.friendlyIsland, EB = CONFIG.world.enemyBase, AC = CONFIG.world.allyCarrier;
+// Unico riferimento per pista, collisione e partenza: il velivolo nasce
+// sulla mezzeria, vicino alla testata +Z, orientato verso -Z.
+const HOME_RUNWAY = Object.freeze({ x: FI.x, z: FI.z, width: 140, length: 1800, y: 4.15 });
+const HOME_TAKEOFF = Object.freeze({ x: HOME_RUNWAY.x, z: HOME_RUNWAY.z + 720 });
 makeIsland(FI.x, FI.z, FI.radius, 2000, 0x4a6a3a);
-makeRunway(FI.x, FI.z, 140, 1800, 4.15, 0x25292d, true);
+makeRunway(HOME_RUNWAY.x, HOME_RUNWAY.z, HOME_RUNWAY.width, HOME_RUNWAY.length, HOME_RUNWAY.y, 0x25292d, true);
 // Segnaletica di testata: rende inequivocabile dove comincia la pista di decollo.
 for (let i = -3; i <= 3; i++) {
     if (i === 0) continue;
@@ -1579,7 +1583,7 @@ function getSurface(p) {
     }
     const th = terrainHeight(p.x, p.z);
     if (th > W.islandHeight) return { height: th, kind: 'mountain' };
-    if (Math.abs(p.x - FI.x) <= 70 && Math.abs(p.z - FI.z) <= 900) return { height: 4.15, kind: 'runway' };
+    if (Math.abs(p.x - HOME_RUNWAY.x) <= HOME_RUNWAY.width/2 && Math.abs(p.z - HOME_RUNWAY.z) <= HOME_RUNWAY.length/2) return { height: HOME_RUNWAY.y, kind: 'runway' };
     if (Math.hypot(p.x - FI.x, p.z - FI.z) < FI.radius) return { height: W.islandHeight, kind: 'island' };
     if (Math.hypot(p.x - EB.x, p.z - EB.z) < EB.radius) return { height: W.islandHeight, kind: 'enemyIsland' };
     for (const isl of smallIslands) if (Math.hypot(p.x - isl.x, p.z - isl.z) < isl.r * 1.15) return { height: 2, kind: 'rock' };
@@ -2594,7 +2598,13 @@ function startMission(from) {
         jetState.position.set(AC.x, DECK_Y + jetGroundClearance, AC.z + 220);
     } else {
         // Single player: sulla pista asfaltata, vicino alla testata segnalata. Non sul piazzale hangar.
-        jetState.position.set(FI.x, 4.15 + jetGroundClearance, FI.z + 630);
+        jetState.position.set(HOME_TAKEOFF.x, HOME_RUNWAY.y + jetGroundClearance, HOME_TAKEOFF.z);
+        // Orientamento iniziale: prua lungo la pista, verso il mare (-Z).
+        jetState.quaternion.identity();
+        jetState.onGround = true;
+        // Aggiorna immediatamente la mesh (anche prima del primo frame fisico).
+        jetPivot.position.copy(jetState.position);
+        jetPivot.quaternion.copy(jetState.quaternion);
     }
     ui.menu.style.display = 'none'; ui.over.style.display = 'none'; ui.pause.style.display = 'none';
     game.state = 'playing';
