@@ -1010,6 +1010,7 @@ const ui = {};
     ui.hctx = ui.horizon.getContext('2d');
 
     ui.radar = el('canvas', root, 'position:absolute;top:60px;right:20px;border-radius:50%;border:2px solid #7dffb0;background:rgba(0,20,0,.6)');
+    ui.radar.id = 'radar';
     ui.radar.width = 180; ui.radar.height = 180;
     ui.rctx = ui.radar.getContext('2d');
 
