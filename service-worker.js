@@ -1,4 +1,4 @@
-const CACHE='f35-coop-v6-20261029';
+const CACHE='f35-coop-v7-groundclearance-20261029';
 const ASSETS=['./','./index.html','./css/style.css','./js/game.js','./js/mobile.js','./js/coop.js','./js/three.min.js','./js/GLTFLoader.js','./models/f-35.glb','./models/portaerei_medio_web.glb'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
