@@ -2,7 +2,7 @@
 (() => {
 'use strict';
 const style=document.createElement('style');style.textContent=`
-#coopOpen{position:fixed;bottom:8px;right:8px;z-index:115;background:#123d4e;color:#b8ffe1;border:1px solid #75d5ac;border-radius:9px;padding:8px 12px;font:bold 12px sans-serif;cursor:pointer}
+#coopOpen{position:fixed;bottom:55px;right:12px;z-index:115;background:#123d4e;color:#b8ffe1;border:1px solid #75d5ac;border-radius:9px;padding:8px 12px;font:bold 12px sans-serif;cursor:pointer}
 #coopPanel{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;background:#06151de8;font:14px system-ui;color:#e3fff6;padding:15px;box-sizing:border-box}
 #coopCard{background:#0e2d3d;border:1px solid #49978b;border-radius:15px;max-width:470px;width:100%;padding:20px;display:grid;gap:12px;max-height:90vh;overflow:auto}
 #coopCard input{background:#0b202c;border:1px solid #6a9b9d;border-radius:7px;color:white;padding:10px;width:100%;box-sizing:border-box}
@@ -32,7 +32,7 @@ function connect(action){
  if(m.type==='roster'){amHost=m.hostId===myId;$('coopStart').disabled=!amHost;$('coopRoster').textContent=m.players.map(p=>'#'+(p.slot+1)+' '+p.name+(p.id===myId?' (tu)':'')).join('  ·  ');for(const [id,obj] of peers){if(!m.players.some(p=>p.id===id)){scene.remove(obj.mesh);peers.delete(id);}}}
  if(m.type==='launch'){
   // Partenza in piazzole diverse: stessa mappa, fisica locale.
-  startMission('base');jetState.position.set(COOP_SPAWNS[slot][0],CONFIG.world.islandHeight+.35,COOP_SPAWNS[slot][1]);
+  startMission('base');jetState.position.set(COOP_SPAWNS[slot][0],CONFIG.world.islandHeight+jetGroundClearance,COOP_SPAWNS[slot][1]);
   panel.style.display='none';running=true;setStatus('Volo di squadra avviato (alpha)');
  }
  if(m.type==='states' && running){for(const p of m.players){if(p.id===myId)continue; if(!peers.has(p.id)){

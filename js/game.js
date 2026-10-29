@@ -27,7 +27,7 @@ const CONFIG = {
     storageKey: 'f35_best_score',
     world: {
         friendlyIsland: { x: 0, z: 800, radius: 1850 },
-        allyCarrier: { x: 0, z: 2500, scale: 1.5 },
+        allyCarrier: { x: 0, z: 4200, scale: 1.5 },
         enemyBase: { x: 0, z: -12000, radius: 2000 },
         islandHeight: 4,
         seaHeight: 0.5
@@ -224,15 +224,21 @@ function makeRunway(x, z, w, len, y, color, stripes) {
 
 const FI = CONFIG.world.friendlyIsland, EB = CONFIG.world.enemyBase, AC = CONFIG.world.allyCarrier;
 makeIsland(FI.x, FI.z, FI.radius, 2000, 0x4a6a3a);
-makeRunway(FI.x, FI.z, 110, 1800, 4.15, 0x333333, true);
+makeRunway(FI.x, FI.z, 140, 1800, 4.15, 0x25292d, true);
+// Segnaletica di testata: rende inequivocabile dove comincia la pista di decollo.
+for (let i = -3; i <= 3; i++) {
+    if (i === 0) continue;
+    const marking = new THREE.Mesh(new THREE.PlaneGeometry(8, 42), new THREE.MeshBasicMaterial({color:0xffffff, side:THREE.DoubleSide}));
+    marking.rotation.x = -Math.PI / 2; marking.position.set(FI.x+i*15, 4.28, FI.z+810); scene.add(marking);
+}
 makeIsland(EB.x, EB.z, EB.radius, 2500, 0x3a5a2a);
 makeRunway(EB.x, EB.z, 150, 2000, 2.5, 0x2a2a2a, false);
 
 // Base alleata ampliata: struttura procedurale leggera per mobile.
 // Le posizioni sono condivise in coordinate mondo, utilizzabili anche per il multiplayer.
 const COOP_SPAWNS = [
-    [-380, FI.z + 600], [-240, FI.z + 600], [-100, FI.z + 600],
-    [100, FI.z + 600], [240, FI.z + 600], [380, FI.z + 600]
+    [-510, FI.z + 1240], [-350, FI.z + 1240], [-190, FI.z + 1240],
+    [190, FI.z + 1240], [350, FI.z + 1240], [510, FI.z + 1240]
 ];
 const baseDeco = new THREE.Group(); scene.add(baseDeco);
 function baseBox(x, y, z, w, h, d, color, parent = baseDeco) {
@@ -243,8 +249,8 @@ function buildAirbase() {
     const z = FI.z;
     // Piazzali per sei piloti, raccordi e hangar con fronte aperto verso la pista.
     for (const side of [-1,1]) {
-        baseBox(side*270, 4.08, z+390, 400, 0.25, 610, 0x545c5e);
-        baseBox(side*125, 4.1, z+300, 170, 0.24, 85, 0x464b4e);
+        baseBox(side*360, 4.08, z+1180, 400, 0.25, 550, 0x545c5e);
+        baseBox(side*170, 4.1, z+890, 145, 0.24, 85, 0x464b4e);
     }
     COOP_SPAWNS.forEach(([x,sz],i)=>{
         baseBox(x,4.23,sz,95,0.2,86,0x606d6c);
@@ -253,7 +259,7 @@ function buildAirbase() {
     });
     [-1,1].forEach(side=>{
         for(let i=0;i<3;i++) {
-            const x=side*(420+ i*130), zpos=z+175;
+            const x=side*(620+ i*150), zpos=z+1230;
             baseBox(x,30,zpos,112,52,155,0x657780);
             baseBox(x,58,zpos,122,8,165,0x394b54);
             // Portone aperto, spazio scuro ben visibile.
@@ -343,6 +349,9 @@ for (let i = 0; i < 30; i++) {
 // ============================================================
 let jetTemplate = null;
 let jetTailZ = 7.2;
+// L'origine del GLB è al centro dell'aereo, NON sotto le ruote.
+// Si aggiorna dal bounding box effettivo del modello caricato.
+let jetGroundClearance = 3.7;
 let jetWingX = 5.5;
 let carrierTemplate = null;
 let carrierDeckY = 0;
@@ -359,6 +368,7 @@ function prepareModel(gltfScene) {
     gltfScene.position.sub(center);
     const fsz = new THREE.Box3().setFromObject(gltfScene).getSize(new THREE.Vector3());
     jetTailZ = fsz.z / 2; jetWingX = fsz.x / 2;
+    jetGroundClearance = fsz.y / 2 + 1.05; // Margine visibile tra modello e pista per evitare compenetrazione
     const holder = new THREE.Group();
     holder.add(gltfScene);
     return holder;
@@ -752,7 +762,7 @@ const game = {
     engineStarted: false, engineSpool: 0, flaps: 0, gear: true,
     showEngineWarning: 0,
     sonarSweep: 0,
-    missionId: 'assault', spawnQueue: [], waveDone: false,
+    missionId: 'baseRaid', spawnQueue: [], waveDone: false,
     aoa: 0, stalled: false, gStress: 0, redout: 0, gloc: 0
 };
 
@@ -1569,6 +1579,7 @@ function getSurface(p) {
     }
     const th = terrainHeight(p.x, p.z);
     if (th > W.islandHeight) return { height: th, kind: 'mountain' };
+    if (Math.abs(p.x - FI.x) <= 70 && Math.abs(p.z - FI.z) <= 900) return { height: 4.15, kind: 'runway' };
     if (Math.hypot(p.x - FI.x, p.z - FI.z) < FI.radius) return { height: W.islandHeight, kind: 'island' };
     if (Math.hypot(p.x - EB.x, p.z - EB.z) < EB.radius) return { height: W.islandHeight, kind: 'enemyIsland' };
     for (const isl of smallIslands) if (Math.hypot(p.x - isl.x, p.z - isl.z) < isl.r * 1.15) return { height: 2, kind: 'rock' };
@@ -1698,8 +1709,11 @@ function updatePlayer(dt) {
     const wasAirborne = !j.onGround;
     const surf = getSurface(j.position);
 
-    let minHeight = surf.height;
-    if (game.gear && surf.height < 10) minHeight = Math.max(surf.height, 4.0);
+    // Il pivot corrisponde al CENTRO del GLB: per poggiare le ruote,
+    // occorre alzarlo rispetto alla superficie della pista/portaerei.
+    // Non aggiungere il distacco a mare o collisioni con lo scafo.
+    const landSurface = surf.kind !== 'sea' && surf.kind !== 'hull' && Number.isFinite(surf.height);
+    const minHeight = surf.height + (landSurface ? jetGroundClearance : 0);
 
     if (j.onGround && surf.kind !== 'hull' && surf.kind !== 'sea' &&
         j.speed > J.takeoffSpeed && playerFwd.y > J.takeoffPitch) {
@@ -1729,7 +1743,7 @@ function updatePlayer(dt) {
         if (pointInBox(j.position, t, 3)) { crashPlayer('Collisione con un bersaglio'); break; }
     }
 
-    const friendlyBase = surf.kind === 'island' || surf.kind === 'carrier';
+    const friendlyBase = surf.kind === 'island' || surf.kind === 'runway' || surf.kind === 'carrier';
     if (j.onGround && friendlyBase && j.speed < 5) {
         game.rearmTimer += dt;
         if (game.rearmTimer > 1.5) {
@@ -2577,9 +2591,10 @@ function startMission(from) {
     initAudio();
     resetGame();
     if (from === 'carrier') {
-        jetState.position.set(AC.x, DECK_Y + 0.1, AC.z + 220);
+        jetState.position.set(AC.x, DECK_Y + jetGroundClearance, AC.z + 220);
     } else {
-        jetState.position.set(COOP_SPAWNS[0][0], CONFIG.world.islandHeight + 0.35, COOP_SPAWNS[0][1]);
+        // Single player: sulla pista asfaltata, vicino alla testata segnalata. Non sul piazzale hangar.
+        jetState.position.set(FI.x, 4.15 + jetGroundClearance, FI.z + 630);
     }
     ui.menu.style.display = 'none'; ui.over.style.display = 'none'; ui.pause.style.display = 'none';
     game.state = 'playing';
@@ -2657,6 +2672,7 @@ loader.load(
         console.error('[LOADER] Errore F-35:', err);
         jetTemplate = buildFallbackJet();
         jetTailZ = 6;
+        jetGroundClearance = 2.9;
         jetPivot.add(getJetTemplate(null).clone(true));
         flame.position.z = jetTailZ;
         ui.menuStatus.textContent = 'F-35 non trovato: uso un jet semplificato.';
